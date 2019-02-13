@@ -1,0 +1,53 @@
+# install script
+# todo: turn into fabric script
+
+#### initialize system
+sudo apt-get update
+sudo apt-get upgrade
+sudo reboot
+
+#### set static ip
+sudo nano /etc/dhcpcd.conf
+
+#### set raspberry pi password
+raspi-config
+
+#### install ntfs drivers for external hdd
+sudo apt-get install ntfs-3g
+sudo mkdir /mnt/usb
+sudo mount /dev/sda2 /mnt/usb
+# make it permanent, fetch the UUID of the external
+sudo lsblk -o UUID,NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL,MODEL
+sudo nano /etc/fstab
+
+#### set up NAS
+sudo apt-get install samba samba-common-bin
+sudo nano /etc/samba/smb.conf
+# create password for user
+sudo smbpasswd -a pi
+sudo /etc/init.d/samba restart
+
+#### set up FTP
+sudo apt-get install proftpd
+# i forgot what i edited here
+sudo nano /etc/proftpd/proftpd.conf
+sudo service proftpd reload
+
+#### install youtube-dl
+sudo apt-get install python-pip
+sudo pip install --upgrade youtube_dl
+sudo echo "--output \"/mnt/usb/youtube/%(title)s.%(ext)s\"" | sudo tee ~/.config/youtube-dl/config
+
+#### set up python scripts
+sudo pip install flask
+sudo pip install flask-login
+sudo export YOUTUBE_PASSWORD={INSERT_PASSWORD}
+
+#### install noip auto updater
+sudo wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+sudo tar xf noip-duc-linux.tar.gz
+cd noip-2.1.9-1/
+sudo make install
+
+#### reboot system
+sudo reboot
