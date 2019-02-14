@@ -39,15 +39,18 @@ sudo pip install --upgrade youtube_dl
 sudo echo "--output \"/mnt/usb/youtube/%(title)s.%(ext)s\"" | sudo tee ~/.config/youtube-dl/config
 
 #### set up python scripts
+sudo pip install BeautifulSoup4
 sudo pip install flask
 sudo pip install flask-login
-sudo export YOUTUBE_PASSWORD={INSERT_PASSWORD}
 
 #### install noip auto updater
 sudo wget http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
 sudo tar xf noip-duc-linux.tar.gz
 cd noip-2.1.9-1/
 sudo make install
+
+cd ~ && git clone https://github.com/dhallatmaine/Youtube-Archiver.git
+
 
 #### reboot system
 sudo reboot

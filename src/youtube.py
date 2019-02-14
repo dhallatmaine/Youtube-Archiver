@@ -1,7 +1,9 @@
-from flask import Flask, request, abort, redirect, Response, url_for, render_template
-from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
 import subprocess
 import os
+import urllib2
+from flask import Flask, flash, request, abort, redirect, Response, url_for, render_template
+from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
@@ -47,7 +49,7 @@ class UsersRepository:
         return self.identifier
 
 users_repository = UsersRepository()
-me = User('vecowski', {INSERT_PASSWORD}, users_repository.next_index())
+me = User('vecowski', 'password', users_repository.next_index())
 users_repository.save_user(me)
 
 @app.route('/')
@@ -57,6 +59,7 @@ def index():
 
 @app.route('/login' , methods=['GET' , 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -65,19 +68,26 @@ def login():
             login_user(registeredUser)
             return redirect(url_for('index'))
         else:
-            return abort(401)
-    else:
-        return render_template('login.html')
+            error = 'Invalid username or password'
+    return render_template('login.html', error = error)
 
 @app.route('/download', methods=['POST'])
+@login_required
 def download():
-        youtube_link = request.form['youtube']
-        audio_only = request.form.get('audio')
-        if audio_only:
-                subprocess.Popen(['sudo', 'youtube-dl', '-f', 'bestaudio[ext=m4a]', youtube_link])
-        else:
-                subprocess.Popen(['sudo', 'youtube-dl', youtube_link])
-        return redirect(url_for('index'))
+    youtube_link = request.form['youtube']
+    audio_only = request.form.get('audio')
+
+    soup = BeautifulSoup(urllib2.urlopen(youtube_link), features="html.parser")
+    title = soup.title.string
+
+    if audio_only:
+        subprocess.Popen(['sudo', 'youtube-dl', '-f', 'bestaudio[ext=m4a]', youtube_link])
+        flash('Downloading audio for ' + title)
+    else:
+        flash('Downloading video for ' + title)
+        subprocess.Popen(['sudo', 'youtube-dl', youtube_link])
+
+    return redirect(url_for('index'))
 
 @app.route("/logout")
 @login_required
@@ -96,4 +106,4 @@ def load_user(userid):
     return users_repository.get_user_by_id(userid)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=False)

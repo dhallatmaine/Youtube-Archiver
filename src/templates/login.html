@@ -59,12 +59,21 @@
                 .button-class {
                         text-align: center;
                 }
+
+                .error {
+                        margin-top: 15px;
+                        text-align: center;
+                        color: #ffffff;
+                }
         </style>
 </head>
 <body>
 <div class="container">
         <div class="d-flex justify-content-center h-100">
                 <div class="card">
+                        {% if error %}
+                                <p class="error">{{ error }}</p>
+                        {% endif %}
                         <div class="card-body">
                                 <form action="" method="POST">
                                         <div class="input-group form-group">

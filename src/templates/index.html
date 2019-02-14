@@ -74,12 +74,26 @@
                         margin-left: 15px;
                         margin-right: 5px;
                 }
+
+                .card-head {
+                        margin-top: 15px;
+                        color: #ffffff;
+                }
         </style>
 </head>
 <body>
 <div class="container">
         <div class="d-flex justify-content-center h-100">
                 <div class="card">
+                        <div class="card-head">
+                                {% with messages = get_flashed_messages() %}
+                                        {% if messages %}
+                                                {% for message in messages %}
+                                                        {{ message }}
+                                                {% endfor %}
+                                        {% endif %}
+                                {% endwith %}
+                        </div>
                         <div class="card-body">
                                 <h5 class="card-title">Download youtube video</h5>
                                 <form action="download" method="POST">
