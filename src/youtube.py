@@ -4,12 +4,21 @@ import urllib2
 from flask import Flask, flash, request, abort, redirect, Response, url_for, render_template
 from flask_login import LoginManager, login_required, UserMixin, login_user, logout_user
 from bs4 import BeautifulSoup
+from celery import Celery
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
+
+# Celery configuration
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+# Initialize Celery
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 class User(UserMixin):
     def __init__(self , username , password , id , active=True):
@@ -85,9 +94,19 @@ def download():
         flash('Downloading audio for ' + title)
     else:
         flash('Downloading video for ' + title)
-        subprocess.Popen(['sudo', 'youtube-dl', youtube_link])
+        task = video_download.apply_async(args=[youtube_link])
+        print(task.id)
+        #subprocess.Popen(['sudo', 'youtube-dl', youtube_link])
 
     return redirect(url_for('index'))
+
+@celery.task(bind=True)
+def video_download(self, youtube_link):
+    print('running task')
+    #proc = subprocess.Popen(['sudo', 'youtube-dl', youtube_link], stdout=PIPE)
+    #for line in iter(proc.stdout.readline, b''):
+        #print line,
+    #proc.communicate()
 
 @app.route("/logout")
 @login_required
