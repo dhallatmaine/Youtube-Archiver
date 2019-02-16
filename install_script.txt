@@ -39,6 +39,7 @@ sudo pip install --upgrade youtube_dl
 sudo echo "--output \"/mnt/usb/youtube/%(title)s.%(ext)s\"" | sudo tee ~/.config/youtube-dl/config
 
 #### set up python scripts
+sudo apt-get install ffmpeg
 sudo pip install BeautifulSoup4
 sudo pip install flask
 sudo pip install flask-login
