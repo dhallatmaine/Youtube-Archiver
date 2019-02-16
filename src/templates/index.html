@@ -6,14 +6,14 @@
         <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+        <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
         <style>
-                @import url('https://fonts.googleapis.com/css?family=Numans');
+                @import url('//fonts.googleapis.com/css?family=Numans');
 
                 html,body{
-                        /* background-image: url('http://getwallpapers.com/wallpaper/full/9/3/0/29039.jpg'); */
-                        background-image: url('https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/intermediary/f/6f131d22-7974-4793-9db3-2160376b5c72/d7b5nfg-5749372c-cda1-46a8-83b5-f6f8b2ba6a1a.jpg/v1/fill/w_1185,h_674,q_70,strp/sky_lanterns_by_wlop_d7b5nfg-pre.jpg');
+                        /* background-image: url('//getwallpapers.com/wallpaper/full/9/3/0/29039.jpg'); */
+                        background-image: url('//images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/intermediary/f/6f131d22-7974-4793-9db3-2160376b5c72/d7b5nfg-5749372c-cda1-46a8-83b5-f6f8b2ba6a1a.jpg/v1/fill/w_1185,h_674,q_70,strp/sky_lanterns_by_wlop_d7b5nfg-pre.jpg');
                         background-size: cover;
                         background-repeat: no-repeat;
                         height: 100%;
@@ -75,9 +75,17 @@
                         margin-right: 5px;
                 }
 
-                .card-head {
-                        margin-top: 15px;
-                        color: #ffffff;
+                .nanobar {
+                        height: 16px;
+                }
+
+                .progress {
+                        width: 100%;
+                        text-align: center;
+                        display: inline;
+                        color: #fff;
+                        margin-bottom: 5px;
+                        background: rgba(0,0,0,0.5) !important;
                 }
         </style>
 </head>
@@ -85,34 +93,73 @@
 <div class="container">
         <div class="d-flex justify-content-center h-100">
                 <div class="card">
-                        <div class="card-head">
-                                {% with messages = get_flashed_messages() %}
-                                        {% if messages %}
-                                                {% for message in messages %}
-                                                        {{ message }}
-                                                {% endfor %}
-                                        {% endif %}
-                                {% endwith %}
-                        </div>
                         <div class="card-body">
                                 <h5 class="card-title">Download youtube video</h5>
-                                <form action="download" method="POST">
-                                        <div class="input-group form-group">
-                                                <div class="input-group-prepend">
-                                                        <span class="input-group-text"><i class="fab fa-youtube"></i></span>
-                                                </div>
-                                                <input type="text" class="form-control" placeholder="youtube link" name="youtube">
+                                <div class="input-group form-group">
+                                        <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fab fa-youtube"></i></span>
                                         </div>
-                                        <div class="row align-items-center audio">
-                                                <input type="checkbox" name="audio">Audio only
-                                        </div>
-                                        <div class="form-group button-class">
-                                                <input type="submit" value="Download" class="btn center-block download_btn">
-                                        </div>
-                                </form>
+                                        <input type="text" class="form-control" placeholder="youtube link" name="youtube" id="youtube">
+                                </div>
+                                <div class="row align-items-center audio">
+                                        <input type="checkbox" name="audio" id="audio">Audio only
+                                </div>
+                                <div class="form-group button-class">
+                                        <input type="submit" value="Download" id="download" class="btn center-block download_btn">
+                                </div>
+                                <div id="progress"></div>
                         </div>
                 </div>
         </div>
 </div>
+<script>
+        function download() {
+                div = $('<div class="progress"><div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"><span id="current-progress"></span></div><div>...</div><div></div></div>');
+                $('#progress').append(div);
+
+                var sendData = {
+                        youtube_link: $('#youtube').val(),
+                        audio: $('#audio').is(':checked')
+                };
+
+                $.ajax({
+                        type: 'POST',
+                        url: '/download',
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        success: function(data, status, request) {
+                                status_url = request.getResponseHeader('Location');
+                                update_progress(status_url, div[0]);
+                        },
+                        error: function() {
+                                alert('Unexpected error');
+                        },
+                        data: JSON.stringify(sendData)
+                });
+        }
+
+        function update_progress(status_url, status_div) {
+                $.getJSON(status_url, function(data) {
+                        percent = parseInt(data['current']);
+
+                        $(status_div.childNodes[1]).text(data['status']);
+                        $(status_div.childNodes[2]).text(data['title']);
+
+                        $(status_div.childNodes[0]).css("width", percent + "%")
+                                .attr("aria-valuenow", percent)
+                                .text(percent + "% Complete");
+
+                        if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS') {
+                                setTimeout(function() {
+                                        update_progress(status_url, status_div);
+                                }, 500);
+                        }
+                });
+        }
+
+        $(function() {
+            $('#download').click(download);
+        });
+</script>
 </body>
 </html>
