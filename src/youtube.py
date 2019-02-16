@@ -189,4 +189,4 @@ def load_user(userid):
     return users_repository.get_user_by_id(userid)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8066, debug=False)
+    app.run(host='0.0.0.0', port=80, debug=False)
