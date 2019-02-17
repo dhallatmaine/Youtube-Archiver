@@ -58,6 +58,7 @@ class UsersRepository:
         self.identifier +=1
         return self.identifier
 
+in_progress = []
 users_repository = UsersRepository()
 me = User('vecowski', 'password', users_repository.next_index())
 users_repository.save_user(me)
@@ -65,7 +66,12 @@ users_repository.save_user(me)
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    for task_id in in_progress:
+        task = video_download.AsyncResult(task_id)
+        if task.info.get('current', 0) == 100:
+            in_progress.remove(task_id)
+
+    return render_template('index.html', in_progress=in_progress)
 
 @app.route('/login' , methods=['GET' , 'POST'])
 def login():
@@ -96,7 +102,8 @@ def download():
     else:
         cmd = ['sudo', 'youtube-dl', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', youtube_link]
 
-    task = video_download.apply_async(args=[cmd, title, audio_only])
+    task = video_download.apply_async(args = [cmd, title, audio_only])
+    in_progress.append(task.id)
     return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
 
 @celery.task(bind=True)
@@ -168,7 +175,7 @@ def taskstatus(task_id):
             'state': task.state,
             'current': 100,
             'status': str(task.info),
-            'title': task.info.get('title')
+            'title': task.info.get('title', '')
         }
     return jsonify(response)
 
@@ -189,4 +196,4 @@ def load_user(userid):
     return users_repository.get_user_by_id(userid)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=False)
+    app.run(host='0.0.0.0', port=8066, debug=False)
